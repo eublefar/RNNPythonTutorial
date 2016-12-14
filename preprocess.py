@@ -5,7 +5,12 @@ import nltk
 import pickle
 import os
 
+unknown_token = "UNKNOWN_TOKEN"
+sentence_start_token = "SENTENCE_START"
+sentence_end_token = "SENTENCE_END"
+
 class dataset:
+
 
     def file_is_empty(self, path):
         with open(path,'rb') as file:
@@ -44,30 +49,36 @@ class dataset:
 
         # Replace all words not in our vocabulary with the unknown token
         for i, sent in enumerate(tokenized_sentences):
-            tokenized_sentences[i] = [w if w in word_to_index else unknown_token for w in sent]
+            tokenized_sentences[i] = [w if w in self.word_to_index else unknown_token for w in sent]
 
         print "\nExample sentence: '%s'" % sentences[0]
         print "\nExample sentence after Pre-processing: '%s'" % tokenized_sentences[0]
 
         # Create the training data
-        self.X_train = np.asarray([[word_to_index[w] for w in sent[:-1]] for sent in tokenized_sentences])
-        self.Y_train = np.asarray([[word_to_index[w] for w in sent[1:]] for sent in tokenized_sentences])
+        tokenized_words = [item for sublist in tokenized_sentences for item in sublist]
+        self.X_train = np.asarray([self.word_to_index[w] for w in tokenized_words[:-1]])
+        self.Y_train = np.asarray([self.word_to_index[w] for w in tokenized_words[1:]])
 
     def __init__(self):
         self.vocabulary_size = 8000
-        unknown_token = "UNKNOWN_TOKEN"
-        sentence_start_token = "SENTENCE_START"
-        sentence_end_token = "SENTENCE_END"
+
 
         with open('train.pkl', 'ab') as out_data, open('train.pkl','rb') as in_data:
             if not self.file_is_empty('train.pkl'):
-                print("previous records :" + str(not self.file_is_empty('train.pkl')))
+                print("previous records :" + str(not self.file_is_empty('train.pkl')) + "\n Loading data...")
                 self.X_train = pickle.load(in_data)
                 self.Y_train = pickle.load(in_data)
+                self.vocabulary_size = pickle.load(in_data)
+                self.index_to_word = pickle.load(in_data)
+                self.word_to_index = pickle.load(in_data)
             elif self.file_is_empty('train.pkl'):
-                print(" no previous records :" + str(file_is_empty('train.pkl')))
-                preprocess_data()
+                print(" no previous records :" + str(self.file_is_empty('train.pkl')) + "\n Generating Data")
+                self.preprocess_data()
+                print("Saving data")
                 pickle.dump(self.X_train, out_data, pickle.HIGHEST_PROTOCOL)
                 pickle.dump(self.Y_train, out_data, pickle.HIGHEST_PROTOCOL)
+                pickle.dump(self.vocabulary_size, out_data, pickle.HIGHEST_PROTOCOL)
+                pickle.dump(self.index_to_word, out_data, pickle.HIGHEST_PROTOCOL)
+                pickle.dump(self.word_to_index, out_data, pickle.HIGHEST_PROTOCOL)
                 in_data.close()
                 out_data.flush()

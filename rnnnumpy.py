@@ -2,6 +2,7 @@ import numpy as np
 
 
 class RNNNumpy:
+
     def __init__(self, word_dim, hidden_dim=100, bptt_truncate=4):
         self.word_dim = word_dim
         self.hidden_dim = hidden_dim
@@ -11,6 +12,11 @@ class RNNNumpy:
         self.V = np.random.uniform(-np.sqrt(1./hidden_dim), np.sqrt(1./hidden_dim), (word_dim, hidden_dim))
         self.W = np.random.uniform(-np.sqrt(1./hidden_dim), np.sqrt(1./hidden_dim), (hidden_dim, hidden_dim))
 
+    def softmax(self,x):
+        """Compute softmax values for each sets of scores in x."""
+        e_x = np.exp(x - np.max(x))
+        return e_x / e_x.sum()
+
     def forward_propagation(self, x):
         T = len(x)
         #hidden states
@@ -19,8 +25,8 @@ class RNNNumpy:
         #outputs
         o = np.zeros((T, self.word_dim))
         #for each time step
-        for t in np.arange(T):
+        for t in range(T):
             # U[:,x[t]] == U * x[t]
             s[t] = np.tanh(self.U[:,x[t]] + self.W.dot(s[t-1]))
-            o[t] = softmax(self.V.dot(s[t]))
+            o[t] = self.softmax(self.V.dot(s[t]))
         return [o, s]
