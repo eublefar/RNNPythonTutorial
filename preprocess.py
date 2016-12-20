@@ -15,7 +15,6 @@ class dataset:
     def file_is_empty(self, path):
         with open(path,'rb') as file:
             file.seek(0,2)
-            print(file.tell())
             return file.tell() == 0
 
 
@@ -55,24 +54,29 @@ class dataset:
         print "\nExample sentence after Pre-processing: '%s'" % tokenized_sentences[0]
 
         # Create the training data
-        tokenized_words = [item for sublist in tokenized_sentences for item in sublist]
-        self.X_train = np.asarray([self.word_to_index[w] for w in tokenized_words[:-1]])
-        self.Y_train = np.asarray([self.word_to_index[w] for w in tokenized_words[1:]])
+        #tokenized_words = [item for sublist in tokenized_sentences for item in sublist]
+        #self.X_train = np.asarray([self.word_to_index[w] for w in tokenized_words[:-1]])
+        #self.Y_train = np.asarray([self.word_to_index[w] for w in tokenized_words[1:]])
+        self.X_train = np.asarray([[self.word_to_index[w] for w in sent[:-1]] for sent in tokenized_sentences])
+        self.Y_train = np.asarray([[self.word_to_index[w] for w in sent[1:]] for sent in tokenized_sentences])
 
     def __init__(self):
         self.vocabulary_size = 8000
 
 
-        with open('train.pkl', 'ab') as out_data, open('train.pkl','rb') as in_data:
-            if not self.file_is_empty('train.pkl'):
-                print("previous records :" + str(not self.file_is_empty('train.pkl')) + "\n Loading data...")
+
+        print("previous records :" + str(not self.file_is_empty('train.pkl')))
+        if (not self.file_is_empty('train.pkl')) and input('Load existing data?\n1.Yes\n2.No\n')==1 :
+            with open('train.pkl','rb') as in_data:
+                print("Loading data...")
                 self.X_train = pickle.load(in_data)
                 self.Y_train = pickle.load(in_data)
                 self.vocabulary_size = pickle.load(in_data)
                 self.index_to_word = pickle.load(in_data)
                 self.word_to_index = pickle.load(in_data)
-            elif self.file_is_empty('train.pkl'):
-                print(" no previous records :" + str(self.file_is_empty('train.pkl')) + "\n Generating Data")
+        else:
+            print("Generating Data")
+            with open('train.pkl', 'wb') as out_data:
                 self.preprocess_data()
                 print("Saving data")
                 pickle.dump(self.X_train, out_data, pickle.HIGHEST_PROTOCOL)
@@ -80,5 +84,4 @@ class dataset:
                 pickle.dump(self.vocabulary_size, out_data, pickle.HIGHEST_PROTOCOL)
                 pickle.dump(self.index_to_word, out_data, pickle.HIGHEST_PROTOCOL)
                 pickle.dump(self.word_to_index, out_data, pickle.HIGHEST_PROTOCOL)
-                in_data.close()
                 out_data.flush()

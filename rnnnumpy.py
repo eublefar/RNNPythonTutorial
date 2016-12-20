@@ -12,10 +12,9 @@ class RNNNumpy:
         self.V = np.random.uniform(-np.sqrt(1./hidden_dim), np.sqrt(1./hidden_dim), (word_dim, hidden_dim))
         self.W = np.random.uniform(-np.sqrt(1./hidden_dim), np.sqrt(1./hidden_dim), (hidden_dim, hidden_dim))
 
-    def softmax(self,x):
-        """Compute softmax values for each sets of scores in x."""
-        e_x = np.exp(x - np.max(x))
-        return e_x / e_x.sum()
+    def predict(self, x):
+        o, s = self.forward_propagation(x)
+        return np.argmax(o, axis=1)
 
     def forward_propagation(self, x):
         T = len(x)
@@ -30,3 +29,20 @@ class RNNNumpy:
             s[t] = np.tanh(self.U[:,x[t]] + self.W.dot(s[t-1]))
             o[t] = self.softmax(self.V.dot(s[t]))
         return [o, s]
+
+    def softmax(self,x):
+        """Compute softmax values for each sets of scores in x."""
+        e_x = np.exp(x - np.max(x))
+        return e_x / e_x.sum()
+
+    def calculate_loss(self, x, y):
+        N = np.sum((len(y_i) for y_i in y))
+        return self.calculate_total_loss(x,y)/N
+
+    def calculate_total_loss(self, x, y):
+        L = 0
+        for i in np.arange(len(y)):
+            o, s = self.forward_propagation(x[i])
+            correct_word_predictions = o[np.arange(len(y[i])), y[i]]
+            L += -1 * np.sum(np.log(correct_word_predictions) * y[i])
+            return L
