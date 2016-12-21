@@ -1,3 +1,4 @@
+import subprocess
 import preprocess
 from rnnnumpy import RNNNumpy
 import numpy as np
@@ -24,3 +25,7 @@ print( array_of_words)
 
 with open('model.pkl','wb') as out:
     pickle.dump(rnn, out, pickle.HIGHEST_PROTOCOL)
+
+subprocess.Popen(["git", "add", "model.pkl"], stdout=subprocess.PIPE)
+subprocess.Popen(["git", "commit", "-m\"auto commit model.pkl\""], stdout=subprocess.PIPE)
+process = subprocess.Popen(["git", "push"], stdout=subprocess.PIPE)
